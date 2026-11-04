@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Дневник эмоций</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f5f2ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14161b" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{
+  --bg:#f5f2ec;--card:#ffffff;--ink:#1f2430;--muted:#6b7280;--line:#e6e1d8;
+  --accent:#4f5fd6;--accent-ink:#ffffff;--accent-soft:#e8ebff;--danger:#d64545;--good:#2e9e5b;
+  --cs:75%;--cb:88%;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14161b;--card:#1d2027;--ink:#eceef3;--muted:#9aa1b0;--line:#2b303a;
+    --accent:#8a97ff;--accent-ink:#10131f;--accent-soft:#272c4a;--danger:#ff7b7b;--good:#5fcf8b;
+    --cs:40%;--cb:27%;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.app{max-width:640px;margin:0 auto;padding:0 14px calc(92px + env(safe-area-inset-bottom))}
+header.top{padding:calc(16px + env(safe-area-inset-top)) 2px 4px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin-top:2px}
+h2{font-size:17px;margin:0 0 4px}
+h3{font-size:15px;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+.hint{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+.empty{color:var(--muted);font-size:14px;margin:10px 0 0}
+label.lbl{display:block;font-weight:600;margin-bottom:6px}
+label.lbl.mt{margin-top:14px}
+input,textarea,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:88px;resize:vertical}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{border:0;border-radius:14px;padding:13px 18px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:16px}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 40%,transparent)}
+.btn.block{width:100%}
+.btn.sm{padding:9px 14px;font-size:14.5px;border-radius:12px}
+.row{display:flex;gap:8px}
+.row>input{flex:1}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.scale button{height:42px;border:1px solid var(--line);background:var(--bg);border-radius:12px;font-weight:600;padding:0}
+.scale button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:8px 13px;font-size:14.5px;font-weight:500}
+.chip.emo.on,.chip.pc.on{background:hsl(var(--h) var(--sat,var(--cs)) var(--cb));border-color:hsl(var(--h) 55% 50%);font-weight:700}
+.chip.act.on,.chip.tm.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;background:hsl(var(--h) var(--sat,60%) 55%)}
+.when-grid{display:grid;grid-template-columns:62px 1fr;gap:14px 10px;align-items:start}
+.when-grid .wl{font-weight:600;padding-top:8px}
+.when-grid .chips{margin-bottom:8px}
+details{border-top:1px solid var(--line)}
+details:first-of-type{border-top:0}
+summary{list-style:none;display:flex;align-items:center;gap:9px;padding:12px 2px;font-weight:600;cursor:pointer}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+details[open]>summary::after{transform:rotate(-135deg)}
+details>.chips{padding:0 0 14px}
+.cnt{color:var(--accent);font-size:13px;font-weight:700}
+.ehead{display:none;grid-template-columns:190px 1fr;gap:12px;color:var(--muted);font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 0 6px}
+.erow{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.ename{display:flex;align-items:center;gap:9px}
+.ename b{flex:1}
+.ename output{font-weight:700;color:var(--accent);min-width:42px;text-align:right}
+.pchips{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pchips .chip{padding:9px 0;text-align:center;border-radius:12px;font-weight:600}
+@media (min-width:560px){
+  .ehead{display:grid}
+  .erow{grid-template-columns:190px 1fr;align-items:center;gap:12px}
+  .pchips{grid-template-columns:repeat(10,1fr)}
+  .ename output{display:none}
+}
+.sel{padding:10px 0;border-top:1px solid var(--line)}
+.sel:first-child{border-top:0}
+.sel-top{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.sel-top b{flex:1}
+.sel-top output{font-weight:700;color:var(--accent);min-width:42px;text-align:right}
+.x{border:0;background:none;color:var(--muted);font-size:22px;line-height:1;padding:2px 6px}
+.sep{height:1px;background:var(--line);margin:14px 0}
+.date-h{color:var(--muted);font-size:13px;font-weight:700;text-transform:capitalize;margin:20px 4px 6px}
+.e-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.time{font-weight:700}
+.mood{font-size:14px;color:var(--muted)}
+.mood b{color:var(--ink)}
+.up{color:var(--good)}.down{color:var(--danger)}
+.kvr{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.kvr:first-child{border-top:0}
+.kvr dt{color:var(--muted);font-size:13px;font-weight:700;padding-top:2px}
+.kvr dd{margin:0;white-space:pre-wrap;word-break:break-word}
+dl{margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag-e{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:99px;font-size:13.5px;background:hsl(var(--h) var(--sat,var(--cs)) var(--cb))}
+.tag-a{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:99px;font-size:13.5px;background:var(--accent-soft);color:var(--accent)}
+.note{margin:10px 0 0;white-space:pre-wrap;word-break:break-word}
+.acts-l{font-size:12.5px;color:var(--muted);font-weight:700;margin:12px 0 6px}
+.e-foot{display:flex;gap:8px;margin-top:14px}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 4px;font-size:14px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px #0002}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
+.tile b{display:block;font-size:22px;letter-spacing:-.02em}
+.tile span{font-size:12.5px;color:var(--muted)}
+.stat{padding:10px 0;border-top:1px solid var(--line)}
+.stat:first-child{border-top:0}
+.stat-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px}
+.stat-top .v{font-weight:700;white-space:nowrap}
+.stat-top small{color:var(--muted);font-weight:500}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.low .bar>i{opacity:.4}
+.chart{display:flex;align-items:flex-end;gap:5px;height:158px;margin-top:10px}
+.chart .col{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.chart .col i{display:block;width:100%;max-width:26px;background:var(--accent);border-radius:6px 6px 2px 2px;min-height:3px}
+.chart .col b{font-size:11px;margin-bottom:3px}
+.chart .col span{font-size:10px;color:var(--muted);margin-top:4px;white-space:nowrap}
+.tagx{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:6px 6px 6px 13px;font-size:14.5px}
+.banner{background:var(--accent-soft);color:var(--accent);border-radius:14px;padding:10px 14px;margin:12px 0;font-size:14px;font-weight:600}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs>div{max-width:640px;margin:0 auto;display:flex;padding:6px 4px}
+nav.tabs button{flex:1;min-width:0;border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;padding:6px 0;border-radius:12px}
+nav.tabs button[aria-current=page]{color:var(--accent)}
+nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:#222836;color:#fff;padding:11px 18px;border-radius:99px;font-size:14.5px;opacity:0;pointer-events:none;transition:.2s;z-index:20;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Дневник эмоций</h1>
+    <div class="sub" id="subtitle">Новая запись</div>
+  </header>
+  <main>
+    <section class="view" id="view-emo"></section>
+    <section class="view" id="view-mood" hidden></section>
+    <section class="view" id="view-history" hidden></section>
+    <section class="view" id="view-stats" hidden></section>
+    <section class="view" id="view-more" hidden></section>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Разделы">
+  <div>
+    <button data-go="emo" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Эмоции</button>
+    <button data-go="mood"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14c1 1.5 2.4 2.2 4 2.2s3-.7 4-2.2M9 9.5h.01M15 9.5h.01"/></svg>Настроение</button>
+    <button data-go="history"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>История</button>
+    <button data-go="stats"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Помогает</button>
+    <button data-go="more"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="var(--card)"/><circle cx="15" cy="12" r="2" fill="var(--card)"/><circle cx="8" cy="17" r="2" fill="var(--card)"/></svg>Ещё</button>
+  </div>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript>Для работы приложения нужен JavaScript.</noscript>
+<script>
+(() => {
+'use strict';
+
+const KEY = 'emodiary.v2';
+const KEY_OLD = 'emodiary.v1';
+
+const GROUPS = [
+  {id:'joy', title:'Радость и подъём', h:45, items:['Радость','Счастье','Восторг','Веселье','Удовлетворение','Благодарность','Гордость','Вдохновение','Надежда','Любовь','Нежность','Уверенность','Энергичность','Азарт','Предвкушение','Облегчение']},
+  {id:'calm', title:'Спокойствие и интерес', h:165, items:['Спокойствие','Умиротворение','Расслабленность','Безмятежность','Интерес','Любопытство','Сосредоточенность','Принятие','Доверие','Близость','Растроганность']},
+  {id:'sad', title:'Грусть', h:215, items:['Грусть','Печаль','Тоска','Уныние','Одиночество','Разочарование','Опустошённость','Апатия','Скука','Горе','Ностальгия','Безнадёжность','Потерянность']},
+  {id:'anx', title:'Тревога и страх', h:275, items:['Тревога','Беспокойство','Страх','Паника','Напряжение','Нервозность','Неуверенность','Растерянность','Беспомощность','Уязвимость','Смущение','Настороженность']},
+  {id:'ang', title:'Злость', h:5, items:['Злость','Раздражение','Гнев','Обида','Возмущение','Фрустрация','Зависть','Ревность','Презрение','Отвращение','Горечь']},
+  {id:'shame', title:'Стыд и вина', h:330, items:['Стыд','Вина','Сожаление','Неловкость','Унижение','Раскаяние','Чувство неполноценности']},
+  {id:'tired', title:'Усталость и тело', h:100, items:['Усталость','Истощение','Перегруженность','Сонливость','Выгорание','Вялость','Телесное напряжение']},
+  {id:'other', title:'Другое', h:220, sat:'10%', items:['Удивление','Шок','Оцепенение','Смешанные чувства','Ничего не чувствую','Ошеломление']}
+];
+const CUSTOM_G = {id:'custom', title:'Мои эмоции', h:200, sat:'45%', items:[]};
+const DEFAULT_ACTIONS = ['Прогулка','Свежий воздух','Музыка','Дыхательные упражнения','Медитация','Разговор с близким','Объятия','Душ или ванна','Сон или отдых','Зарядка','Спорт','Танцы','Запись мыслей','Рисование','Уборка','Чай или кофе','Вкусная еда','Фильм или сериал','Время с питомцем','Чтение','Игры','Позвонить другу'];
+const PCTS = [10,20,30,40,50,60,70,80,90,100];
+const DAY_CHIPS = [['Сегодня',0],['Вчера',1],['Позавчера',2]];
+const TIME_CHIPS = [['Сейчас','now'],['Утро','08:00'],['День','13:00'],['Вечер','19:00'],['Ночь','23:00']];
+
+/* ---------- утилиты ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fmt1 = n => n.toFixed(1).replace('.', ',').replace('-', '−');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const num110 = v => (v == null || v === '' || !isFinite(+v)) ? null : clamp(Math.round(+v), 1, 10);
+const txt = (v, n) => String(v == null ? '' : v).slice(0, n);
+function tsFrom(date, time){
+  const [y, m, d] = String(date).split('-').map(Number);
+  const [h, mi] = String(time).split(':').map(Number);
+  const t = new Date(y, (m || 1) - 1, d || 1, h || 0, mi || 0).getTime();
+  return isFinite(t) ? t : null;
+}
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ---------- данные ---------- */
+const cleanEmotions = a => (Array.isArray(a) ? a : [])
+  .map(m => ({name: txt(m && m.name, 40), pct: clamp(Math.round(+(m && m.pct) || 0), 0, 100)})).filter(m => m.name);
+const cleanActions = a => (Array.isArray(a) ? a : [])
+  .map(x => ({name: txt(x && x.name, 40), rating: num110(x && x.rating)})).filter(x => x.name && x.rating);
+
+function cleanDiary(e){
+  if (!e || typeof e !== 'object' || !isFinite(+e.ts)) return null;
+  return {id: String(e.id || uid()), ts: +e.ts, event: txt(e.event, 5000), emotions: cleanEmotions(e.emotions),
+          thoughts: txt(e.thoughts, 5000), body: txt(e.body, 3000), behavior: txt(e.behavior, 3000)};
+}
+function cleanMood(e){
+  if (!e || typeof e !== 'object' || !isFinite(+e.ts)) return null;
+  return {id: String(e.id || uid()), ts: +e.ts, mood: num110(e.mood), after: num110(e.after),
+          note: txt(e.note, 3000), actions: cleanActions(e.actions)};
+}
+function normalize(d){
+  d = d && typeof d === 'object' ? d : {};
+  const str = a => (Array.isArray(a) ? a : []).map(x => String(x).trim().slice(0, 40)).filter(Boolean);
+  const diary = (Array.isArray(d.diary) ? d.diary : []).map(cleanDiary).filter(Boolean);
+  const moods = (Array.isArray(d.moods) ? d.moods : []).map(cleanMood).filter(Boolean);
+  // перенос записей из первой версии (одна запись = эмоции + настроение)
+  if (Array.isArray(d.entries)) d.entries.forEach(o => {
+    if (!o || !isFinite(+o.ts)) return;
+    const id = String(o.id || uid()), emotions = cleanEmotions(o.emotions), actions = cleanActions(o.actions);
+    const before = num110(o.before), after = num110(o.after);
+    if (emotions.length) diary.push({id, ts: +o.ts, event: txt(o.note, 5000), emotions, thoughts: '', body: '', behavior: ''});
+    if (before != null || after != null || actions.length) moods.push({id: id + '-m', ts: +o.ts, mood: before, after, note: '', actions});
+  });
+  return {diary, moods, actions: Array.isArray(d.actions) ? str(d.actions) : DEFAULT_ACTIONS.slice(), customEmotions: str(d.customEmotions)};
+}
+function load(){
+  try { const raw = localStorage.getItem(KEY); if (raw) return normalize(JSON.parse(raw)); } catch (e) {}
+  try { const old = localStorage.getItem(KEY_OLD); if (old){ const s = normalize(JSON.parse(old)); try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} return s; } } catch (e) {}
+  return normalize({});
+}
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(state)); return true; }
+  catch (e) { toast('Не удалось сохранить данные'); return false; }
+}
+
+let state = load();
+const newDraftEmo = () => { const n = new Date(); return {id: null, date: ymd(n), time: hm(n), whenSet: false, event: '', emotions: [], thoughts: '', body: '', behavior: ''}; };
+const newDraftMood = () => { const n = new Date(); return {id: null, date: ymd(n), time: hm(n), whenSet: false, mood: null, after: null, note: '', actions: []}; };
+let draftEmo = newDraftEmo(), draftMood = newDraftMood();
+const editing = {emo: null, mood: null};
+let current = 'emo', histMode = 'emo', stPeriod = 'all', stBand = '';
+const openGroups = new Set();
+let searching = false;
+
+const draftOf = f => f === 'emo' ? draftEmo : draftMood;
+const pristine = f => {
+  const d = draftOf(f);
+  if (d.whenSet) return false;
+  return f === 'emo' ? !d.emotions.length && !d.event && !d.thoughts && !d.body && !d.behavior
+                     : d.mood == null && d.after == null && !d.note && !d.actions.length;
+};
+const allGroups = () => state.customEmotions.length ? GROUPS.concat([{...CUSTOM_G, items: state.customEmotions}]) : GROUPS;
+const allEmotionNames = () => allGroups().flatMap(g => g.items);
+const groupOf = name => allGroups().find(g => g.items.includes(name)) || CUSTOM_G;
+const gStyle = g => `--h:${g.h}` + (g.sat ? `;--sat:${g.sat}` : '');
+
+/* ---------- навигация ---------- */
+const TITLES = {emo:'Новая запись: эмоции', mood:'Новая запись: настроение', history:'История', stats:'Что помогает', more:'Ещё'};
+function go(name){
+  current = name;
+  $$('.view').forEach(v => v.hidden = v.id !== 'view-' + name);
+  $$('nav.tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.go === name ? 'page' : 'false'));
+  $('#subtitle').textContent = (name === 'emo' || name === 'mood') && editing[name] ? 'Изменение записи' : TITLES[name];
+  ({emo: renderEmo, mood: renderMood, history: renderHistory, stats: renderStats, more: renderMore})[name]();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- блок «Когда» (общий для обеих форм) ---------- */
+function whenInner(f){
+  const d = draftOf(f);
+  const days = DAY_CHIPS.map(([l, o]) => { const t = new Date(); t.setDate(t.getDate() - o);
+    return `<button type="button" class="chip tm ${d.date === ymd(t) ? 'on' : ''}" data-day="${o}">${l}</button>`; }).join('');
+  const times = TIME_CHIPS.map(([l, t]) => `<button type="button" class="chip tm ${t !== 'now' && d.time === t ? 'on' : ''}" data-time="${t}">${l}</button>`).join('');
+  return `<div class="when-grid">
+    <div class="wl">День</div><div><div class="chips">${days}</div><input type="date" data-w="date" value="${esc(d.date)}" max="${ymd(new Date())}" aria-label="Дата"></div>
+    <div class="wl">Время</div><div><div class="chips">${times}</div><input type="time" data-w="time" value="${esc(d.time)}" aria-label="Время"></div>
+  </div>`;
+}
+function setWhen(f, patch){
+  Object.assign(draftOf(f), patch, {whenSet: true});
+  $('#' + f + '-when').innerHTML = whenInner(f);
+}
+function onWhenClick(f, t){
+  let el;
+  if ((el = t.closest('[data-day]'))){
+    const d = new Date(); d.setDate(d.getDate() - (+el.dataset.day)); setWhen(f, {date: ymd(d)}); return true;
+  }
+  if ((el = t.closest('[data-time]'))){
+    if (el.dataset.time === 'now'){ const n = new Date(); setWhen(f, {date: ymd(n), time: hm(n)}); }
+    else setWhen(f, {time: el.dataset.time});
+    return true;
+  }
+  return false;
+}
+function onWhenChange(f, t){
+  if (!t.dataset || !t.dataset.w) return false;
+  if (t.value) setWhen(f, {[t.dataset.w]: t.value}); else setWhen(f, {});
+  return true;
+}
+
+const scaleBtns = val => Array.from({length: 10}, (_, i) => i + 1)
+  .map(n => `<button type="button" class="${val === n ? 'on' : ''}" data-v="${n}" aria-pressed="${val === n}">${n}</button>`).join('');
+
+/* ---------- форма «Эмоции» ---------- */
+function renderEmo(){
+  if (!editing.emo && pristine('emo')){ const n = new Date(); draftEmo.date = ymd(n); draftEmo.time = hm(n); }
+  const d = draftEmo;
+  $('#view-emo').innerHTML = `
+    ${editing.emo ? '<div class="banner">Вы редактируете сохранённую запись</div>' : ''}
+    <section class="card"><h2>Когда</h2><div id="emo-when" style="margin-top:12px">${whenInner('emo')}</div></section>
+
+    <section class="card">
+      <label class="lbl" for="emo-event">Что случилось?</label>
+      <textarea id="emo-event" data-fld="event" maxlength="5000" placeholder="Опишите событие или ситуацию">${esc(d.event)}</textarea>
+    </section>
+
+    <section class="card">
+      <h2>Эмоции и их сила</h2>
+      <p class="hint">Раскройте группу, выберите одну или несколько эмоций, затем отметьте силу каждой в процентах.</p>
+      <input type="search" id="emo-search" placeholder="Найти эмоцию…" autocomplete="off" style="margin-bottom:8px">
+      <div id="emo-groups"></div>
+      <div class="row" style="margin-top:12px">
+        <input id="emo-custom" placeholder="Своя эмоция…" maxlength="40" enterkeyhint="done">
+        <button type="button" class="btn ghost" id="emo-add">Добавить</button>
+      </div>
+      <h3>Выбранные эмоции</h3>
+      <div id="emo-selected"></div>
+    </section>
+
+    <section class="card">
+      <label class="lbl" for="emo-thoughts">Какие мысли пришли?</label>
+      <textarea id="emo-thoughts" data-fld="thoughts" maxlength="5000" placeholder="Что вы подумали в этот момент?">${esc(d.thoughts)}</textarea>
+    </section>
+
+    <section class="card">
+      <h2>Реакция тела и поведение</h2>
+      <label class="lbl mt" for="emo-body">Что происходило в теле?</label>
+      <textarea id="emo-body" data-fld="body" maxlength="3000" placeholder="Например: сжалось в груди, ком в горле, тяжесть в плечах">${esc(d.body)}</textarea>
+      <label class="lbl mt" for="emo-behavior">Как вы себя повели?</label>
+      <textarea id="emo-behavior" data-fld="behavior" maxlength="3000" placeholder="Что сделали или не сделали">${esc(d.behavior)}</textarea>
+    </section>
+
+    <button type="button" class="btn block" id="emo-save">${editing.emo ? 'Сохранить изменения' : 'Сохранить запись'}</button>
+    ${editing.emo ? '<button type="button" class="btn ghost block" id="emo-cancel" style="margin-top:8px">Отменить изменения</button>' : ''}
+  `;
+  renderEmoGroups(); renderSelEmo();
+}
+function renderEmoGroups(){
+  $('#emo-groups').innerHTML = allGroups().map(g => `
+    <details data-g="${g.id}" ${openGroups.has(g.id) ? 'open' : ''}>
+      <summary><span class="dot" style="${gStyle(g)}"></span>${esc(g.title)}<span class="cnt"></span></summary>
+      <div class="chips">${g.items.map(n => `<button type="button" class="chip emo" data-emo="${esc(n)}" style="${gStyle(g)}">${esc(n)}</button>`).join('')}</div>
+    </details>`).join('');
+  syncEmoChips(); updateGroupCounts();
+}
+function syncEmoChips(){
+  $$('#view-emo .chip.emo').forEach(c => {
+    const on = draftEmo.emotions.some(e => e.name === c.dataset.emo);
+    c.classList.toggle('on', on); c.setAttribute('aria-pressed', on);
+  });
+}
+function updateGroupCounts(){
+  $$('#emo-groups details').forEach(d => {
+    const n = $$('.chip.emo.on', d).length;
+    $('.cnt', d).textContent = n ? '· ' + n : '';
+  });
+}
+function filterEmo(q){
+  q = q.trim().toLowerCase(); searching = !!q;
+  $$('#emo-groups details').forEach(d => {
+    let matches = 0;
+    $$('.chip.emo', d).forEach(c => { const ok = !q || c.dataset.emo.toLowerCase().includes(q); c.hidden = !ok; if (ok) matches++; });
+    d.hidden = !!q && matches === 0;
+    d.open = q ? matches > 0 : openGroups.has(d.dataset.g);
+  });
+}
+function renderSelEmo(){
+  const box = $('#emo-selected');
+  if (!draftEmo.emotions.length){ box.innerHTML = '<p class="empty">Пока ничего не выбрано</p>'; return; }
+  box.innerHTML = '<div class="ehead"><span>Эмоция</span><span>Сила, %</span></div>' + draftEmo.emotions.map((e, i) => `
+    <div class="erow" data-i="${i}" style="${gStyle(groupOf(e.name))}">
+      <div class="ename"><span class="dot"></span><b>${esc(e.name)}</b><output>${e.pct == null ? '—' : e.pct + '%'}</output><button type="button" class="x" data-rm-emo="${i}" aria-label="Убрать ${esc(e.name)}">×</button></div>
+      <div class="pchips">${PCTS.map(p => `<button type="button" class="chip pc ${e.pct === p ? 'on' : ''}" data-p="${p}" aria-pressed="${e.pct === p}">${p}</button>`).join('')}</div>
+    </div>`).join('');
+}
+function toggleEmo(name){
+  const i = draftEmo.emotions.findIndex(e => e.name === name);
+  if (i >= 0) draftEmo.emotions.splice(i, 1); else draftEmo.emotions.push({name, pct: null});
+  syncEmoChips(); updateGroupCounts(); renderSelEmo();
+}
+function addEmotion(raw){
+  const name = raw.trim().slice(0, 40); if (!name) return;
+  let ex = allEmotionNames().find(n => n.toLowerCase() === name.toLowerCase());
+  if (!ex){ state.customEmotions.push(name); ex = name; save(); openGroups.add('custom'); renderEmoGroups(); }
+  if (!draftEmo.emotions.some(e => e.name === ex)) draftEmo.emotions.push({name: ex, pct: null});
+  syncEmoChips(); updateGroupCounts(); renderSelEmo();
+  $('#emo-custom').value = '';
+}
+function saveEmo(){
+  const d = draftEmo;
+  if (!d.emotions.length){ toast('Выберите хотя бы одну эмоцию'); $('#emo-search').scrollIntoView({block:'center'}); return; }
+  const miss = d.emotions.find(e => e.pct == null);
+  if (miss){ toast('Укажите силу эмоции «' + miss.name + '»'); $('#emo-selected').scrollIntoView({block:'center'}); return; }
+  const ts = tsFrom(d.date, d.time);
+  if (ts == null){ toast('Проверьте день и время'); return; }
+  const entry = {id: d.id || uid(), ts, event: d.event.trim(), emotions: d.emotions.map(e => ({name: e.name, pct: e.pct})),
+                 thoughts: d.thoughts.trim(), body: d.body.trim(), behavior: d.behavior.trim()};
+  const i = state.diary.findIndex(x => x.id === entry.id);
+  if (i >= 0) state.diary[i] = entry; else state.diary.push(entry);
+  if (!save()) return;
+  const wasEdit = !!editing.emo;
+  draftEmo = newDraftEmo(); editing.emo = null; histMode = 'emo';
+  go('history'); toast(wasEdit ? 'Изменения сохранены' : 'Запись сохранена');
+}
+
+/* ---------- форма «Настроение» ---------- */
+function renderMood(){
+  if (!editing.mood && pristine('mood')){ const n = new Date(); draftMood.date = ymd(n); draftMood.time = hm(n); }
+  const d = draftMood;
+  $('#view-mood').innerHTML = `
+    ${editing.mood ? '<div class="banner">Вы редактируете сохранённую запись</div>' : ''}
+    <section class="card"><h2>Когда</h2><div id="mood-when" style="margin-top:12px">${whenInner('mood')}</div></section>
+
+    <section class="card">
+      <h2>Настроение сейчас</h2>
+      <p class="hint">1 — очень плохо, 10 — отлично.</p>
+      <div class="scale" id="mood-sc-now">${scaleBtns(d.mood)}</div>
+    </section>
+
+    <section class="card">
+      <h2>Что помогало изменить настроение?</h2>
+      <p class="hint">Отметьте действия и оцените, насколько каждое помогло: 1 — совсем нет, 10 — очень сильно.</p>
+      <div class="chips" id="act-chips"></div>
+      <div class="row" style="margin-top:12px">
+        <input id="act-custom" placeholder="Своё действие…" maxlength="40" enterkeyhint="done">
+        <button type="button" class="btn ghost" id="act-add">Добавить</button>
+      </div>
+      <h3>Оценка действий</h3>
+      <div id="act-selected"></div>
+    </section>
+
+    <section class="card">
+      <h2>Настроение после</h2>
+      <p class="hint">Необязательно. Нажмите на выбранное число ещё раз, чтобы сбросить.</p>
+      <div class="scale" id="mood-sc-after">${scaleBtns(d.after)}</div>
+    </section>
+
+    <section class="card">
+      <label class="lbl" for="mood-note">Комментарий</label>
+      <textarea id="mood-note" maxlength="3000" placeholder="Необязательно">${esc(d.note)}</textarea>
+    </section>
+
+    <button type="button" class="btn block" id="mood-save">${editing.mood ? 'Сохранить изменения' : 'Сохранить запись'}</button>
+    ${editing.mood ? '<button type="button" class="btn ghost block" id="mood-cancel" style="margin-top:8px">Отменить изменения</button>' : ''}
+  `;
+  renderActChips(); renderSelAct();
+}
+function renderActChips(){
+  $('#act-chips').innerHTML = state.actions.length
+    ? state.actions.map(a => `<button type="button" class="chip act ${draftMood.actions.some(x => x.name === a) ? 'on' : ''}" data-act-name="${esc(a)}">${esc(a)}</button>`).join('')
+    : '<p class="empty">Список действий пуст — добавьте своё ниже.</p>';
+}
+function renderSelAct(){
+  const box = $('#act-selected');
+  if (!draftMood.actions.length){ box.innerHTML = '<p class="empty">Пока ничего не выбрано</p>'; return; }
+  box.innerHTML = draftMood.actions.map((a, i) => `
+    <div class="sel">
+      <div class="sel-top"><b>${esc(a.name)}</b><output>${a.rating ?? '—'}</output><button type="button" class="x" data-rm-act="${i}" aria-label="Убрать ${esc(a.name)}">×</button></div>
+      <div class="scale" data-act="${i}">${scaleBtns(a.rating)}</div>
+    </div>`).join('');
+}
+function toggleAct(name){
+  const i = draftMood.actions.findIndex(a => a.name === name);
+  if (i >= 0) draftMood.actions.splice(i, 1); else draftMood.actions.push({name, rating: null});
+  renderActChips(); renderSelAct();
+}
+function addAction(raw){
+  const name = raw.trim().slice(0, 40); if (!name) return;
+  let ex = state.actions.find(a => a.toLowerCase() === name.toLowerCase());
+  if (!ex){ state.actions.push(name); ex = name; save(); }
+  if (!draftMood.actions.some(a => a.name === ex)) draftMood.actions.push({name: ex, rating: null});
+  renderActChips(); renderSelAct();
+  $('#act-custom').value = '';
+}
+function saveMood(){
+  const d = draftMood;
+  if (d.mood == null){ toast('Укажите настроение по шкале от 1 до 10'); $('#mood-sc-now').scrollIntoView({block:'center'}); return; }
+  const miss = d.actions.find(a => !a.rating);
+  if (miss){ toast('Оцените действие «' + miss.name + '»'); $('#act-selected').scrollIntoView({block:'center'}); return; }
+  const ts = tsFrom(d.date, d.time);
+  if (ts == null){ toast('Проверьте день и время'); return; }
+  const entry = {id: d.id || uid(), ts, mood: d.mood, after: d.after, note: d.note.trim(), actions: d.actions.map(a => ({name: a.name, rating: a.rating}))};
+  const i = state.moods.findIndex(x => x.id === entry.id);
+  if (i >= 0) state.moods[i] = entry; else state.moods.push(entry);
+  if (!save()) return;
+  const wasEdit = !!editing.mood;
+  draftMood = newDraftMood(); editing.mood = null; histMode = 'mood';
+  go('history'); toast(wasEdit ? 'Изменения сохранены' : 'Запись сохранена');
+}
+
+/* ---------- История ---------- */
+function dayLabel(ts){
+  const d = new Date(ts), now = new Date();
+  const opts = {weekday:'long', day:'numeric', month:'long'};
+  if (d.getFullYear() !== now.getFullYear()) opts.year = 'numeric';
+  return d.toLocaleDateString('ru-RU', opts);
+}
+const timeOf = ts => new Date(ts).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+const foot = id => `<div class="e-foot"><button type="button" class="btn ghost sm" data-edit="${esc(id)}">Изменить</button><button type="button" class="btn danger sm" data-del="${esc(id)}">Удалить</button></div>`;
+
+function diaryHTML(e){
+  const rows = [];
+  if (e.event) rows.push(['Что случилось', esc(e.event)]);
+  rows.push(['Эмоции', `<div class="tags">${e.emotions.map(m => `<span class="tag-e" style="${gStyle(groupOf(m.name))}">${esc(m.name)} <b>${m.pct}%</b></span>`).join('')}</div>`]);
+  if (e.thoughts) rows.push(['Мысли', esc(e.thoughts)]);
+  if (e.body) rows.push(['Тело', esc(e.body)]);
+  if (e.behavior) rows.push(['Поведение', esc(e.behavior)]);
+  return `<article class="card" data-id="${esc(e.id)}">
+    <div class="e-head"><span class="time">${timeOf(e.ts)}</span></div>
+    <dl>${rows.map(([k, v]) => `<div class="kvr"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+    ${foot(e.id)}
+  </article>`;
+}
+function moodHTML(e){
+  let mood = '';
+  if (e.mood != null && e.after != null){
+    const d = e.after - e.mood;
+    mood = `Настроение <b>${e.mood} → ${e.after}</b> <span class="${d > 0 ? 'up' : d < 0 ? 'down' : ''}">(${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(d)})</span>`;
+  } else if (e.mood != null) mood = `Настроение <b>${e.mood}</b>`;
+  else if (e.after != null) mood = `После: <b>${e.after}</b>`;
+  return `<article class="card" data-id="${esc(e.id)}">
+    <div class="e-head"><span class="time">${timeOf(e.ts)}</span><span class="mood">${mood}</span></div>
+    ${e.actions.length ? `<div class="acts-l">ПОМОГАЛО</div><div class="tags">${e.actions.map(a => `<span class="tag-a">${esc(a.name)} <b>${a.rating}/10</b></span>`).join('')}</div>` : ''}
+    ${e.note ? `<p class="note">${esc(e.note)}</p>` : ''}
+    ${foot(e.id)}
+  </article>`;
+}
+function renderHistory(){
+  const v = $('#view-history');
+  const seg = `<div class="seg" id="h-seg">
+    <button type="button" data-hm="emo" class="${histMode === 'emo' ? 'on' : ''}">Эмоции (${state.diary.length})</button>
+    <button type="button" data-hm="mood" class="${histMode === 'mood' ? 'on' : ''}">Настроение (${state.moods.length})</button></div>`;
+  const list = (histMode === 'emo' ? state.diary : state.moods).slice().sort((a, b) => b.ts - a.ts);
+  if (!list.length){
+    v.innerHTML = seg + `<div class="card"><h2>Пока нет записей</h2><p class="hint" style="margin:0">Добавьте первую на вкладке «${histMode === 'emo' ? 'Эмоции' : 'Настроение'}».</p></div>`;
+    return;
+  }
+  let html = seg, last = '';
+  list.forEach(e => {
+    const d = new Date(e.ts), key = ymd(d);
+    if (key !== last){ html += `<div class="date-h">${esc(dayLabel(e.ts))}</div>`; last = key; }
+    html += histMode === 'emo' ? diaryHTML(e) : moodHTML(e);
+  });
+  v.innerHTML = html;
+}
+
+/* ---------- Что помогает ---------- */
+const BANDS = {low: 'Низкое (1–4)', mid: 'Среднее (5–7)', high: 'Высокое (8–10)'};
+const bandOf = m => m.mood == null ? '' : m.mood <= 4 ? 'low' : m.mood <= 7 ? 'mid' : 'high';
+function renderStats(){
+  const v = $('#view-stats');
+  if (!state.moods.length && !state.diary.length){
+    v.innerHTML = '<div class="card"><h2>Данных пока нет</h2><p class="hint" style="margin:0">Когда появятся записи настроения с оценёнными действиями, здесь будет видно, что помогает лично вам.</p></div>';
+    return;
+  }
+  const now = Date.now();
+  const inP = ts => stPeriod === 'all' || ts >= now - (+stPeriod) * 864e5;
+  const moods = state.moods.filter(m => inP(m.ts));
+  const diary = state.diary.filter(e => inP(e.ts));
+  const list = stBand ? moods.filter(m => bandOf(m) === stBand) : moods;
+
+  const am = new Map();
+  list.forEach(e => e.actions.forEach(a => { const o = am.get(a.name) || {n: 0, sum: 0}; o.n++; o.sum += a.rating; am.set(a.name, o); }));
+  const rows = [...am].map(([name, o]) => ({name, n: o.n, avg: o.sum / o.n})).sort((a, b) => b.avg - a.avg || b.n - a.n);
+  const rated = list.filter(m => m.mood != null).map(m => m.mood);
+  const avgMood = rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : null;
+  const deltas = list.filter(m => m.mood != null && m.after != null).map(m => m.after - m.mood);
+  const avgDelta = deltas.length ? deltas.reduce((a, b) => a + b, 0) / deltas.length : null;
+
+  // настроение по дням (последние 14 дней с записями)
+  const days = new Map();
+  moods.filter(m => m.mood != null).forEach(m => { const k = ymd(new Date(m.ts)); const o = days.get(k) || {n: 0, sum: 0}; o.n++; o.sum += m.mood; days.set(k, o); });
+  const chart = [...days].sort((a, b) => a[0].localeCompare(b[0])).slice(-14);
+
+  const emoCount = new Map();
+  diary.forEach(e => e.emotions.forEach(m => { const o = emoCount.get(m.name) || {n: 0, sum: 0}; o.n++; o.sum += m.pct; emoCount.set(m.name, o); }));
+
+  v.innerHTML = `
+    <div class="seg" id="st-period">
+      <button type="button" data-period="7" class="${stPeriod === '7' ? 'on' : ''}">7 дней</button>
+      <button type="button" data-period="30" class="${stPeriod === '30' ? 'on' : ''}">30 дней</button>
+      <button type="button" data-period="all" class="${stPeriod === 'all' ? 'on' : ''}">Всё время</button>
+    </div>
+    <label class="lbl" for="st-band">Что помогает, когда настроение</label>
+    <select id="st-band">
+      <option value="">Любое</option>
+      ${Object.entries(BANDS).map(([k, l]) => `<option value="${k}" ${k === stBand ? 'selected' : ''}>${l}</option>`).join('')}
+    </select>
+
+    <div class="tiles">
+      <div class="tile"><b>${list.length}</b><span>записей настроения</span></div>
+      <div class="tile"><b>${avgMood == null ? '—' : fmt1(avgMood)}</b><span>среднее настроение</span></div>
+      <div class="tile"><b>${avgDelta == null ? '—' : (avgDelta > 0 ? '+' : '') + fmt1(avgDelta)}</b><span>сдвиг после действий</span></div>
+    </div>
+
+    <section class="card">
+      <h2>${stBand ? 'Помогает при настроении: ' + BANDS[stBand].toLowerCase() : 'Что помогает'}</h2>
+      <p class="hint">Средняя оценка действия по 10-балльной шкале. Бледные полоски — меньше 3 оценок, выводы пока неточные.</p>
+      ${rows.length ? rows.map(r => `
+        <div class="stat ${r.n < 3 ? 'low' : ''}">
+          <div class="stat-top"><span>${esc(r.name)}</span><span class="v">${fmt1(r.avg)} <small>· ${r.n}×</small></span></div>
+          <div class="bar"><i style="width:${r.avg * 10}%"></i></div>
+        </div>`).join('') : '<p class="empty">В выбранном периоде нет оценённых действий.</p>'}
+    </section>
+
+    <section class="card">
+      <h2>Настроение по дням</h2>
+      <p class="hint">Среднее за день, до 14 последних дней с записями.</p>
+      ${chart.length ? `<div class="chart">${chart.map(([k, o]) => { const a = o.sum / o.n; const p = k.split('-');
+        return `<div class="col"><b>${fmt1(a).replace(',0', '')}</b><i style="height:${Math.round(a * 10)}px"></i><span>${p[2]}.${p[1]}</span></div>`; }).join('')}</div>` : '<p class="empty">Нет записей настроения за период.</p>'}
+    </section>
+
+    <section class="card">
+      <h2>Частые эмоции</h2>
+      <p class="hint">Сколько раз встречалась эмоция в дневнике и какой была её средняя сила.</p>
+      ${[...emoCount].sort((a, b) => b[1].n - a[1].n || b[1].sum - a[1].sum).slice(0, 8).map(([n, o]) => `
+        <div class="stat">
+          <div class="stat-top"><span><span class="dot" style="${gStyle(groupOf(n))};margin-right:8px"></span>${esc(n)}</span><span class="v">${o.n}× <small>· ср. ${Math.round(o.sum / o.n)}%</small></span></div>
+        </div>`).join('') || '<p class="empty">В выбранном периоде нет записей дневника.</p>'}
+    </section>`;
+}
+
+/* ---------- Ещё ---------- */
+let installEvt = null;
+function renderMore(){
+  $('#view-more').innerHTML = `
+    <section class="card">
+      <h2>Мои действия</h2>
+      <p class="hint">Этот список появляется в записи настроения. Удаление не затрагивает старые записи.</p>
+      <div class="chips">${state.actions.map((a, i) => `<span class="tagx">${esc(a)}<button type="button" class="x" data-del-act="${i}" aria-label="Удалить ${esc(a)}">×</button></span>`).join('') || '<span class="empty">Список пуст</span>'}</div>
+      <div class="row" style="margin-top:12px"><input id="more-act" placeholder="Новое действие…" maxlength="40"><button type="button" class="btn ghost" id="more-act-add">Добавить</button></div>
+      <div class="sep"></div>
+      <button type="button" class="btn ghost sm" id="act-reset">Вернуть стандартный список</button>
+    </section>
+
+    ${state.customEmotions.length ? `
+    <section class="card">
+      <h2>Мои эмоции</h2>
+      <p class="hint">Добавленные вами эмоции.</p>
+      <div class="chips">${state.customEmotions.map((a, i) => `<span class="tagx">${esc(a)}<button type="button" class="x" data-del-emo="${i}" aria-label="Удалить ${esc(a)}">×</button></span>`).join('')}</div>
+    </section>` : ''}
+
+    <section class="card">
+      <h2>Таблицы (CSV)</h2>
+      <p class="hint">Откройте в Excel или Google Таблицах.</p>
+      <button type="button" class="btn block" id="csv-day">Общая таблица по дням</button>
+      <p class="hint" style="margin:8px 0 16px">Одна строка — один день: слева эмоции (событие, мысли, тело, поведение), справа настроение и что помогало.</p>
+      <p class="hint" style="margin-bottom:8px">Или по отдельности, одна запись — одна строка:</p>
+      <div class="row"><button type="button" class="btn ghost" id="csv-emo" style="flex:1">Эмоции</button><button type="button" class="btn ghost" id="csv-mood" style="flex:1">Настроение</button></div>
+    </section>
+
+    <section class="card">
+      <h2>Резервная копия</h2>
+      <p class="hint">Данные хранятся только в браузере этого телефона. Если очистить данные Chrome или удалить приложение, записи пропадут — делайте копию время от времени.</p>
+      <div class="row"><button type="button" class="btn ghost" id="export" style="flex:1">Сохранить в файл</button><button type="button" class="btn ghost" id="import" style="flex:1">Загрузить из файла</button></div>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+      <p class="hint" style="margin:10px 0 0">Записей: эмоции — ${state.diary.length}, настроение — ${state.moods.length}</p>
+    </section>
+
+    <section class="card">
+      <h2>Установка на телефон</h2>
+      <p class="hint" style="margin-bottom:${installEvt ? 12 : 0}px">В Chrome на Android: меню ⋮ → «Установить приложение» (или «Добавить на главный экран»). Иконка появится среди приложений, а запускаться оно будет без адресной строки.</p>
+      ${installEvt ? '<button type="button" class="btn block" id="install">Установить приложение</button>' : ''}
+    </section>
+
+    <section class="card">
+      <h2>Опасная зона</h2>
+      <p class="hint">Удалит все записи и настройки на этом устройстве.</p>
+      <button type="button" class="btn danger" id="wipe">Удалить все данные</button>
+    </section>`;
+}
+
+function download(name, text, type){
+  const blob = new Blob([text], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+const stamp = () => ymd(new Date());
+function exportData(){
+  download(`dnevnik-emocij-${stamp()}.json`, JSON.stringify({app:'emodiary', version:2, exported:new Date().toISOString(), ...state}, null, 2), 'application/json');
+  toast('Файл сохранён');
+}
+function csvCell(s){
+  s = String(s == null ? '' : s);
+  if (/^[=+\-@\t\r]/.test(s) && !/^[+-]?\d+([.,]\d+)?$/.test(s)) s = "'" + s; // защита от формул в Excel (числа не трогаем)
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+function exportCsv(kind){
+  const rows = [], asc = (a, b) => a.ts - b.ts;
+  const dt = ts => { const d = new Date(ts); return [`${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`, hm(d)]; };
+  if (kind === 'emo'){
+    rows.push(['Дата','Время','Что случилось','Эмоции','Мысли','Реакция тела','Поведение']);
+    state.diary.slice().sort(asc).forEach(e => rows.push([...dt(e.ts), e.event, e.emotions.map(m => `${m.name} ${m.pct}%`).join('; '), e.thoughts, e.body, e.behavior]));
+  } else {
+    rows.push(['Дата','Время','Настроение','Настроение после','Что помогало (оценка 1-10)','Комментарий']);
+    state.moods.slice().sort(asc).forEach(e => rows.push([...dt(e.ts), e.mood ?? '', e.after ?? '', e.actions.map(a => `${a.name} ${a.rating}`).join('; '), e.note]));
+  }
+  download(`${kind === 'emo' ? 'emocii' : 'nastroenie'}-${stamp()}.csv`, '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+  toast('Таблица сохранена');
+}
+// Общая таблица: одна строка = один день. Слева эмоции, справа настроение.
+// Если за день несколько записей, они идут в одной ячейке, каждая с новой строки и со временем.
+function exportDaily(){
+  const days = new Map();
+  const day = ts => { const k = ymd(new Date(ts)); if (!days.has(k)) days.set(k, {diary: [], moods: []}); return days.get(k); };
+  state.diary.forEach(e => day(e.ts).diary.push(e));
+  state.moods.forEach(e => day(e.ts).moods.push(e));
+  if (!days.size){ toast('Пока нет записей для выгрузки'); return; }
+  const asc = (a, b) => a.ts - b.ts;
+  const at = (e, s) => s ? `${hm(new Date(e.ts))} ${s}` : '';
+  const lines = (arr, f) => arr.map(f).filter(Boolean).join('\n');
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const dec = n => n == null ? '' : String(Math.round(n * 10) / 10).replace('.', ',');
+  const rows = [['Дата','Эмоции за день','Что случилось','Мысли','Реакция тела','Поведение',
+                 'Настроение (среднее)','Настроение по записям','Что помогало (оценка 1-10)','Сдвиг настроения после действий','Комментарий']];
+  [...days.keys()].sort().forEach(k => {
+    const {diary, moods} = days.get(k); diary.sort(asc); moods.sort(asc);
+    const [y, m, d] = k.split('-');
+    rows.push([
+      `${d}.${m}.${y}`,
+      lines(diary, e => at(e, e.emotions.map(x => `${x.name} ${x.pct}%`).join('; '))),
+      lines(diary, e => at(e, e.event)),
+      lines(diary, e => at(e, e.thoughts)),
+      lines(diary, e => at(e, e.body)),
+      lines(diary, e => at(e, e.behavior)),
+      dec(avg(moods.filter(x => x.mood != null).map(x => x.mood))),
+      lines(moods, e => e.mood == null && e.after == null ? '' : at(e, `${e.mood ?? '?'}${e.after != null ? ' → ' + e.after : ''}`)),
+      lines(moods, e => at(e, e.actions.map(a => `${a.name} ${a.rating}`).join('; '))),
+      dec(avg(moods.filter(x => x.mood != null && x.after != null).map(x => x.after - x.mood))),
+      lines(moods, e => at(e, e.note))
+    ]);
+  });
+  download(`obshchaya-tablica-${stamp()}.csv`, '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+  toast('Таблица сохранена');
+}
+function importData(file){
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = normalize(JSON.parse(r.result));
+      const have = new Set(state.diary.map(e => e.id).concat(state.moods.map(e => e.id)));
+      const nd = d.diary.filter(e => !have.has(e.id)), nm = d.moods.filter(e => !have.has(e.id));
+      if (!confirm(`В файле новых записей: эмоции — ${nd.length}, настроение — ${nm.length}. Добавить их к текущим?`)) return;
+      state.diary.push(...nd); state.moods.push(...nm);
+      d.actions.forEach(a => { if (!state.actions.some(x => x.toLowerCase() === a.toLowerCase())) state.actions.push(a); });
+      d.customEmotions.forEach(a => { if (!allEmotionNames().some(x => x.toLowerCase() === a.toLowerCase())) state.customEmotions.push(a); });
+      save(); renderMore(); toast('Импортировано записей: ' + (nd.length + nm.length));
+    } catch (e) { toast('Не удалось прочитать файл'); }
+  };
+  r.readAsText(file);
+}
+
+/* ---------- обработчики ---------- */
+function bind(){
+  $('nav.tabs').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+
+  // форма «Эмоции»
+  const ve = $('#view-emo');
+  ve.addEventListener('click', e => {
+    const t = e.target; let el;
+    if (onWhenClick('emo', t)) return;
+    if ((el = t.closest('[data-p]'))){ draftEmo.emotions[+el.closest('.erow').dataset.i].pct = +el.dataset.p; renderSelEmo(); }
+    else if ((el = t.closest('[data-emo]'))) toggleEmo(el.dataset.emo);
+    else if ((el = t.closest('[data-rm-emo]'))){ draftEmo.emotions.splice(+el.dataset.rmEmo, 1); syncEmoChips(); updateGroupCounts(); renderSelEmo(); }
+    else if (t.closest('#emo-add')) addEmotion($('#emo-custom').value);
+    else if (t.closest('#emo-save')) saveEmo();
+    else if (t.closest('#emo-cancel')){ draftEmo = newDraftEmo(); editing.emo = null; go('history'); }
+  });
+  ve.addEventListener('input', e => {
+    const t = e.target;
+    if (t.dataset && t.dataset.fld) draftEmo[t.dataset.fld] = t.value;
+    else if (t.id === 'emo-search') filterEmo(t.value);
+  });
+  ve.addEventListener('change', e => { onWhenChange('emo', e.target); });
+  ve.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'emo-custom'){ e.preventDefault(); addEmotion(e.target.value); } });
+  ve.addEventListener('toggle', e => {
+    if (searching) return;
+    const d = e.target; if (!d.matches || !d.matches('details[data-g]')) return;
+    d.open ? openGroups.add(d.dataset.g) : openGroups.delete(d.dataset.g);
+  }, true);
+
+  // форма «Настроение»
+  const vm = $('#view-mood');
+  vm.addEventListener('click', e => {
+    const t = e.target; let el;
+    if (onWhenClick('mood', t)) return;
+    if ((el = t.closest('.scale button'))){
+      const sc = el.parentElement, val = +el.dataset.v;
+      if (sc.id === 'mood-sc-now'){ draftMood.mood = draftMood.mood === val ? null : val; sc.innerHTML = scaleBtns(draftMood.mood); }
+      else if (sc.id === 'mood-sc-after'){ draftMood.after = draftMood.after === val ? null : val; sc.innerHTML = scaleBtns(draftMood.after); }
+      else if (sc.dataset.act !== undefined){
+        const a = draftMood.actions[+sc.dataset.act]; if (!a) return;
+        a.rating = val; sc.innerHTML = scaleBtns(val);
+        sc.parentElement.querySelector('output').textContent = val;
+      }
+    }
+    else if ((el = t.closest('[data-act-name]'))) toggleAct(el.dataset.actName);
+    else if ((el = t.closest('[data-rm-act]'))){ draftMood.actions.splice(+el.dataset.rmAct, 1); renderActChips(); renderSelAct(); }
+    else if (t.closest('#act-add')) addAction($('#act-custom').value);
+    else if (t.closest('#mood-save')) saveMood();
+    else if (t.closest('#mood-cancel')){ draftMood = newDraftMood(); editing.mood = null; go('history'); }
+  });
+  vm.addEventListener('input', e => { if (e.target.id === 'mood-note') draftMood.note = e.target.value; });
+  vm.addEventListener('change', e => { onWhenChange('mood', e.target); });
+  vm.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'act-custom'){ e.preventDefault(); addAction(e.target.value); } });
+
+  // история
+  $('#view-history').addEventListener('click', e => {
+    const t = e.target; let el;
+    if ((el = t.closest('[data-hm]'))){ histMode = el.dataset.hm; renderHistory(); return; }
+    const arr = histMode === 'emo' ? state.diary : state.moods;
+    if ((el = t.closest('[data-edit]'))){
+      const en = arr.find(x => x.id === el.dataset.edit); if (!en) return;
+      const d = new Date(en.ts), draft = JSON.parse(JSON.stringify(en));
+      delete draft.ts; draft.date = ymd(d); draft.time = hm(d); draft.whenSet = true;
+      if (histMode === 'emo') draftEmo = draft; else draftMood = draft;
+      editing[histMode] = en.id; go(histMode);
+    } else if ((el = t.closest('[data-del]'))){
+      if (!confirm('Удалить эту запись?')) return;
+      const id = el.dataset.del;
+      if (histMode === 'emo') state.diary = state.diary.filter(x => x.id !== id); else state.moods = state.moods.filter(x => x.id !== id);
+      save(); renderHistory(); toast('Запись удалена');
+    }
+  });
+
+  // статистика
+  const vs = $('#view-stats');
+  vs.addEventListener('click', e => { const b = e.target.closest('[data-period]'); if (b){ stPeriod = b.dataset.period; renderStats(); } });
+  vs.addEventListener('change', e => { if (e.target.id === 'st-band'){ stBand = e.target.value; renderStats(); } });
+
+  // ещё
+  const vo = $('#view-more');
+  const addMoreAct = () => {
+    const name = $('#more-act').value.trim().slice(0, 40); if (!name) return;
+    if (!state.actions.some(a => a.toLowerCase() === name.toLowerCase())){ state.actions.push(name); save(); }
+    renderMore();
+  };
+  vo.addEventListener('click', e => {
+    const t = e.target; let el;
+    if ((el = t.closest('[data-del-act]'))){ state.actions.splice(+el.dataset.delAct, 1); save(); renderMore(); }
+    else if ((el = t.closest('[data-del-emo]'))){
+      const name = state.customEmotions[+el.dataset.delEmo];
+      state.customEmotions.splice(+el.dataset.delEmo, 1);
+      draftEmo.emotions = draftEmo.emotions.filter(x => x.name !== name);
+      save(); renderMore();
+    }
+    else if (t.closest('#more-act-add')) addMoreAct();
+    else if (t.closest('#act-reset')){
+      if (!confirm('Заменить список действий стандартным? Добавленные вами действия исчезнут из списка (в записях они останутся).')) return;
+      state.actions = DEFAULT_ACTIONS.slice(); save(); renderMore();
+    }
+    else if (t.closest('#csv-day')) exportDaily();
+    else if (t.closest('#csv-emo')) exportCsv('emo');
+    else if (t.closest('#csv-mood')) exportCsv('mood');
+    else if (t.closest('#export')) exportData();
+    else if (t.closest('#import')) $('#import-file').click();
+    else if (t.closest('#install') && installEvt){ installEvt.prompt(); installEvt = null; renderMore(); }
+    else if (t.closest('#wipe')){
+      if (!confirm('Удалить ВСЕ записи и настройки? Это нельзя отменить.')) return;
+      state = normalize({}); draftEmo = newDraftEmo(); draftMood = newDraftMood(); editing.emo = editing.mood = null;
+      save(); renderMore(); toast('Все данные удалены');
+    }
+  });
+  vo.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'more-act'){ e.preventDefault(); addMoreAct(); } });
+  vo.addEventListener('change', e => { if (e.target.id === 'import-file' && e.target.files[0]){ importData(e.target.files[0]); e.target.value = ''; } });
+
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (current === 'more') renderMore(); });
+  window.addEventListener('appinstalled', () => { installEvt = null; if (current === 'more') renderMore(); });
+}
+
+/* ---------- запуск ---------- */
+bind();
+go('emo');
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+})();
+</script>
+</body>
+</html>
